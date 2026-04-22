@@ -1,5 +1,6 @@
 import random
 import torch
+from typing import Optional
 from pomegranate.markov_chain import MarkovChain
 
 class RpsAgent:
@@ -8,7 +9,7 @@ class RpsAgent:
     to predict the user's next move based on their history.
     """
     
-    def __init__(self, data_manager):
+    def __init__(self, data_manager)-> None:
          
         self.data = data_manager
         
@@ -26,12 +27,12 @@ class RpsAgent:
         
         self._train_model()
 
-    def update(self, current_move):
+    def update(self, current_move: str)-> None:
         """Saves the user's move to disk and retrains the AI."""
         self.data.add_sample(current_move)
         self._train_model()
 
-    def _prepare_dataset(self):
+    def _prepare_dataset(self)-> Optional[torch.Tensor]:
         """Extracts history from JSON and transforms it into PyTorch Tensors."""
         history = list(self.data.samples)
         
@@ -44,7 +45,7 @@ class RpsAgent:
         
         return torch.tensor(tensor_pairs)
 
-    def _train_model(self):
+    def _train_model(self)-> None:
         """Fits the Pomegranate Markov Chain using the tensor dataset."""
         X_tensor = self._prepare_dataset()
         
@@ -53,7 +54,7 @@ class RpsAgent:
             self.model.fit(X_tensor)
             self.is_trained = True
 
-    def get_action(self):
+    def get_action(self)-> str:
         """Predicts user's next move and returns the winning counter-move."""
         if not self.is_trained or len(self.data.samples) == 0:
             return random.choice(self.valid_moves)
@@ -65,7 +66,7 @@ class RpsAgent:
         transition_matrix = self.model.distributions[1].probs[0]
         
         # Find the index with the highest probability
-        predicted_idx = torch.argmax(transition_matrix[last_move_idx]).item()
+        predicted_idx = int(torch.argmax(transition_matrix[last_move_idx]).item())
         predicted_move = self.decode[predicted_idx]
         
         return self.rules[predicted_move]
