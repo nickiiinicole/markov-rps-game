@@ -5,6 +5,18 @@ from src.mod.DataManager import DataManager
 from src.mod.RpsAgent import RpsAgent
 
 
+ARCHIVES_TEST = os.path.join(os.path.dirname(__file__), "archives_tests")
+
+def test_read_static_rock_json():
+    test_filename = os.path.join(ARCHIVES_TEST, "rock.json")
+    
+    manager = DataManager(filename=test_filename)
+    agent = RpsAgent(manager)
+    
+    ai_move = agent.get_action()
+
+    assert ai_move == "Paper", f"Expected Paper, got {ai_move}"
+
 
 def create_sample(filename, moves):
     with open(filename, 'w') as f:
