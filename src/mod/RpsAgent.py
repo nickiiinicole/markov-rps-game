@@ -32,18 +32,24 @@ class RpsAgent:
         self.data.add_sample(current_move)
         self._train_model()
 
-    def _prepare_dataset(self)-> Optional[torch.Tensor]:
-        """Extracts history from JSON and transforms it into PyTorch Tensors."""
+    def _prepare_dataset(self) -> Optional[torch.Tensor]:
+        """Extracts history from JSON and transforms it into 3D PyTorch Tensors."""
         history = list(self.data.samples)
         
         if len(history) < 2:
             return None
             
-        encoded_history = [self.encode[move] for move in history]
-        chain_samples = [[sample] for sample in encoded_history]
-        tensor_pairs = [list(pair) for pair in zip(chain_samples, chain_samples[1:])]
+        # Inject a base history with all 3 options [0, 1, 2] at the beginning.
+        # This prevents PyTorch out-of-bounds errors.
+        encoded_history = [0, 1, 2] + [self.encode[move] for move in history]
         
-        return torch.tensor(tensor_pairs)
+        # Pomegranate strictly requires 3D tensors: 
+        # (batch_size, sequence_length, n_features)
+        # We transform our 1D array into a 3D shape (1, length, 1)
+        tensor_1d = torch.tensor(encoded_history)
+        tensor_3d = tensor_1d.view(1, -1, 1)
+        
+        return tensor_3d
 
     def _train_model(self)-> None:
         """Fits the Pomegranate Markov Chain using the tensor dataset."""
