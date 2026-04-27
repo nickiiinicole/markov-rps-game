@@ -13,5 +13,22 @@ The project utilizes the Pomegranate library for Markov Chain modeling and PyTor
 ## Installation
 Dependencies are managed via 'uv'. To install the required packages, run:
 
+1. Create a virtual environment:
 ```bash
-uv pip install -r requirements.txt
+uv venv
+```
+
+2. Install the required dependencies:
+```bash
+    uv pip install -r requirements.txt
+```
+
+3. Running the Application
+```bash
+    -----linux/Mac Os-----
+    source .venv/bin/activate
+    uv run python main.py
+    -----Windows-----
+    .venv\Scripts\activate
+    python main.py
+```
