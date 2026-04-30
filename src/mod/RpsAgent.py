@@ -14,15 +14,23 @@ class RpsAgent:
         self.data = data_manager
         
         # Game Rules
-        self.rules = {"Rock": "Paper", "Paper": "Scissors", "Scissors": "Rock"}
+        self.rules = {
+            "Rock": ["Paper", "Spock"],
+            "Paper": ["Scissors", "Lizard"],
+            "Scissors": ["Rock", "Spock"],
+            "Lizard": ["Rock", "Scissors"],
+            "Spock": ["Paper", "Lizard"]
+        }
         self.valid_moves = list(self.rules.keys())
         
         # Transformation categorical <-> numerical for processing  
-        self.encode = {"Rock": 0, "Paper": 1, "Scissors": 2}
-        self.decode = {0: "Rock", 1: "Paper", 2: "Scissors"}
+        self.encode = {"Rock": 0, "Paper": 1, "Scissors": 2, "Lizard": 3, "Spock": 4}
+        self.decode = {0: "Rock", 1: "Paper", 2: "Scissors", 3: "Lizard", 4: "Spock"}
         
         # Initialize Pomegranate ML Model
         self.model = MarkovChain(k=1)
+        # k is the order of the Markov Chain, 1 means it considers only the last move for prediction
+
         self.is_trained = False
         
         self._train_model()
@@ -39,9 +47,9 @@ class RpsAgent:
         if len(history) < 2:
             return None
             
-        # Inject a base history with all 3 options [0, 1, 2] at the beginning.
+        # Inject a base history with all 5 options [0, 1, 2, 3, 4] at the beginning.
         # This prevents PyTorch out-of-bounds errors.
-        encoded_history = [0, 1, 2] + [self.encode[move] for move in history]
+        encoded_history = [0, 1, 2, 3, 4] + [self.encode[move] for move in history]
         
         # Pomegranate strictly requires 3D tensors: 
         # (batch_size, sequence_length, n_features)
@@ -75,4 +83,6 @@ class RpsAgent:
         predicted_idx = int(torch.argmax(transition_matrix[last_move_idx]).item())
         predicted_move = self.decode[predicted_idx]
         
-        return self.rules[predicted_move]
+        counter_moves: list[str] = self.rules[predicted_move]
+        
+        return random.choice(counter_moves)

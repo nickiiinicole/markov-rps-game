@@ -6,7 +6,7 @@ def determine_winner(user_move: str, ai_move: str, rules: dict) -> str:
     """Evaluates the winner based on game rules."""
     if user_move == ai_move:
         return "DRAW"
-    elif rules[user_move] == ai_move:
+    elif ai_move in rules[user_move]:
         return "AI_WINS"
     else:
         return "USER_WINS"
@@ -20,7 +20,7 @@ def main():
     manager = DataManager()
     agent = RpsAgent(manager)
     
-    options = {"1": "Rock", "2": "Paper", "3": "Scissors"}
+    options = {"1": "Rock", "2": "Paper", "3": "Scissors", "4": "Lizard", "5": "Spock"}
     
     print(f"[*] History loaded: {len(manager.samples)} samples")
     print("[*] Ready to play. Press 0 to save and exit.")
@@ -32,6 +32,8 @@ def main():
         print(" [1] Rock")
         print(" [2] Paper")
         print(" [3] Scissors")
+        print(" [4] Lizard")
+        print(" [5] Spock")
         print(" [0] Exit")
         
         choice = input(">> ").strip()
