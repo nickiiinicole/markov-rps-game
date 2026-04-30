@@ -1,5 +1,6 @@
 import random
 import torch
+import itertools
 from typing import Optional
 from pomegranate.markov_chain import MarkovChain
 
@@ -28,8 +29,8 @@ class RpsAgent:
         self.decode = {0: "Rock", 1: "Paper", 2: "Scissors", 3: "Lizard", 4: "Spock"}
         
         # Initialize Pomegranate ML Model
-        self.model = MarkovChain(k=1)
-        # k is the order of the Markov Chain, 1 means it considers only the last move for prediction
+        self.model = MarkovChain(k=2)
+        # k is the order of the Markov Chain, 2 means it considers the last two moves for prediction
 
         self.is_trained = False
         
@@ -49,8 +50,13 @@ class RpsAgent:
             
         # Inject a base history with all 5 options [0, 1, 2, 3, 4] at the beginning.
         # This prevents PyTorch out-of-bounds errors.
-        encoded_history = [0, 1, 2, 3, 4] + [self.encode[move] for move in history]
-        
+        base_states = [0, 1, 2, 3, 4]
+        laplace_sequence: list[int] = []
+        for combinacion in itertools.product(base_states, repeat=2):
+            laplace_sequence.extend(combinacion)
+            
+        # Unimos la secuencia de Laplace con el historial real
+        encoded_history = laplace_sequence + [self.encode[move] for move in history]
         # Pomegranate strictly requires 3D tensors: 
         # (batch_size, sequence_length, n_features)
         # We transform our 1D array into a 3D shape (1, length, 1)
@@ -70,19 +76,20 @@ class RpsAgent:
 
     def get_action(self)-> str:
         """Predicts user's next move and returns the winning counter-move."""
-        if not self.is_trained or len(self.data.samples) == 0:
+        # If the model isn't trained or we don't have enough data, return a random move
+        if not self.is_trained or len(self.data.samples) <2:
             return random.choice(self.valid_moves)
 
-        last_move_str = self.data.samples[-1]
-        last_move_idx = self.encode[last_move_str]
+        move_minus_2 = self.encode[self.data.samples[-2]]
+        move_minus_1 = self.encode[self.data.samples[-1]]
 
         # Extract the transition matrix calculated by Pomegranate
-        transition_matrix = self.model.distributions[1].probs[0]
+        transition_matrix = self.model.distributions[2].probs[0]
         
         # Find the index with the highest probability
-        predicted_idx = int(torch.argmax(transition_matrix[last_move_idx]).item())
+        predicted_idx = int(torch.argmax(transition_matrix[move_minus_2][move_minus_1]).item())
         predicted_move = self.decode[predicted_idx]
         
         counter_moves: list[str] = self.rules[predicted_move]
-        
+
         return random.choice(counter_moves)
