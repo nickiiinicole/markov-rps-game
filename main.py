@@ -6,7 +6,7 @@ def determine_winner(user_move: str, ai_move: str, rules: dict) -> str:
     """Evaluates the winner based on game rules."""
     if user_move == ai_move:
         return "DRAW"
-    elif rules[user_move] == ai_move:
+    elif ai_move in rules[user_move]:  
         return "AI_WINS"
     else:
         return "USER_WINS"
